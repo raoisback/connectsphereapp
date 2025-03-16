@@ -1,0 +1,1237 @@
+#:kivy 2.1.0
+#:import os os
+#:import dp kivy.metrics.dp
+#:import sp kivy.metrics.sp
+#:import MDTextField kivymd.uix.textfield.MDTextField
+#:import MDRoundFlatButton kivymd.uix.button.MDRoundFlatButton
+#:import MDSpinner kivymd.uix.spinner.MDSpinner
+#:import Factory kivy.factory.Factory
+#:import Slider kivy.uix.slider.Slider
+#:import Animation kivy.animation.Animation
+#:import Clock kivy.clock.Clock
+#:import time time
+
+# Define global variables for asset paths
+<Global>:
+    ASSETS_DIR: os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets')
+    default_icon: os.path.join(self.ASSETS_DIR, 'default_icon.png')
+    default_background: os.path.join(self.ASSETS_DIR, 'default_background.jpg')
+    default_post_image: os.path.join(self.ASSETS_DIR, 'default_post_image.jpg')
+
+# PostCard widget template
+<PostCard>:
+    size_hint: 0.9, None
+    height: dp(350)
+    padding: dp(10)
+    elevation: 12
+    radius: [dp(20)]
+    md_bg_color: 0.2, 0.2, 0.2, 1
+    canvas.before:
+        Color:
+            rgba: 0, 0, 0, 0.4
+        Rectangle:
+            pos: self.x + dp(5), self.y - dp(5)
+            size: self.width, self.height
+        Color:
+            rgba: 1, 0.2, 0.2, 0.5 if root.liked else 0, 0, 0, 0
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(20)]
+    BoxLayout:
+        orientation: 'vertical'
+        spacing: dp(5)
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(50)
+            padding: dp(5)
+            AsyncImage:
+                id: avatar
+                source: root.profile_image if root.profile_image else app.default_icon
+                size_hint: None, None
+                size: dp(40), dp(40)
+                canvas.before:
+                    Color:
+                        rgba: 1, 1, 1, 1
+                    Ellipse:
+                        pos: self.pos
+                        size: self.size
+            BoxLayout:
+                orientation: 'vertical'
+                padding: [dp(5), 0, 0, 0]
+                MDLabel:
+                    text: root.title
+                    font_style: "Subtitle1"
+                    theme_text_color: "Custom"
+                    text_color: 1, 1, 1, 1
+                    markup: True
+                MDLabel:
+                    text: root.timestamp
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: 0.7, 0.7, 0.7, 1
+        AsyncImage:
+            id: image_widget
+            source: root.image_url if root.image_url else app.default_post_image
+            size_hint_y: 0.6
+            allow_stretch: True
+            keep_ratio: True
+        MDLabel:
+            text: root.subtitle
+            font_style: "Body1"
+            theme_text_color: "Custom"
+            text_color: 0.9, 0.9, 0.9, 1
+            padding: [dp(10), 0, 0, 0]
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(50)
+            padding: dp(5)
+            spacing: dp(5)
+            MDRoundFlatButton:
+                id: like_button
+                text: f"♥ {root.like_count}"
+                text_color: 1, 0.2, 0.2, 1 if root.liked else 0.7, 0.7, 0.7, 1
+                md_bg_color: 0.3, 0.3, 0.3, 1
+                on_press: root.toggle_like()
+            MDRoundFlatButton:
+                text: "Follow"
+                text_color: 0, 0.5, 0, 1
+                md_bg_color: 0.3, 0.3, 0.3, 1
+                on_press: root.toggle_follow()
+            MDRoundFlatButton:
+                text: "💬"
+                text_color: 0.5, 0.5, 0.5, 1
+                md_bg_color: 0.3, 0.3, 0.3, 1
+                on_press: root.show_comments()
+            MDRoundFlatButton:
+                text: "✉"
+                text_color: 0.5, 0.5, 0.5, 1
+                md_bg_color: 0.3, 0.3, 0.3, 1
+                on_press: root.send_message()
+            MDRoundFlatButton:
+                text: "🚩"
+                text_color: 1, 0, 0, 1
+                md_bg_color: 0.3, 0.3, 0.3, 1
+                on_press: root.report_post()
+
+# LoginScreen Popup
+<LoginScreen>:
+    size_hint: 0.8, 0.8
+    title: "Login / Register"
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(10)
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        MDLabel:
+            text: "Welcome to ConnectSphere"
+            font_style: "H5"
+            halign: "center"
+            theme_text_color: "Custom"
+            text_color: 1, 1, 1, 1
+        MDTextField:
+            id: username
+            hint_text: "Username"
+            mode: "rectangle"
+            size_hint_y: None
+            height: dp(48)
+            text: app.user_id if app.user_id != "Guest" else ""
+            helper_text: "Required"
+            helper_text_mode: "on_error"
+            background_color: 0, 0, 0, 0.3
+            canvas.before:
+                Color:
+                    rgba: 1, 1, 1, 0.1
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [dp(10)]
+        MDTextField:
+            id: password
+            hint_text: "Password"
+            password: True
+            mode: "rectangle"
+            size_hint_y: None
+            height: dp(48)
+            helper_text: "Required"
+            helper_text_mode: "on_error"
+            background_color: 0, 0, 0, 0.3
+            canvas.before:
+                Color:
+                    rgba: 1, 1, 1, 0.1
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [dp(10)]
+        MDLabel:
+            id: status_label
+            text: root.status
+            halign: "center"
+            theme_text_color: "Error"
+            size_hint_y: None
+            height: dp(30)
+        MDRoundFlatButton:
+            text: "Login"
+            text_color: 0, 0, 0, 1
+            md_bg_color: 0.9, 0.5, 0.5, 1
+            pos_hint: {"center_x": 0.5}
+            on_release: root.login()
+        MDRoundFlatButton:
+            text: "Register"
+            text_color: 0, 0, 0, 1
+            md_bg_color: 0.9, 0.5, 0.5, 1
+            pos_hint: {"center_x": 0.5}
+            on_release: root.register()
+        MDRoundFlatButton:
+            text: "Cancel"
+            text_color: 1, 1, 1, 1
+            md_bg_color: 0.3, 0.3, 0.3, 1
+            pos_hint: {"center_x": 0.5}
+            on_release: root.dismiss()
+
+# Root ScreenManager with Navigation
+ScreenManager:
+    id: screen_manager
+    transition: SlideTransition(direction="left")
+    MDNavigationLayout:
+        ScreenManager:
+            id: screen_manager_inner
+            HomeScreen:
+                name: "home"
+            VibeSphereScreen:
+                name: "vibesphere"
+            EchoScreen:
+                name: "echo"
+            FrameScreen:
+                name: "frame"
+            PulseScreen:
+                name: "pulse"
+            TimeCapsuleScreen:
+                name: "capsule"
+            RootsScreen:
+                name: "roots"
+            SparkScreen:
+                name: "spark"
+            ChallengeScreen:
+                name: "challenge"
+            GlowScreen:
+                name: "glow"
+            OrbitScreen:
+                name: "orbit"
+            OrbitConstellationScreen:
+                name: "constellation"
+            SettingsScreen:
+                name: "settings"
+            MessagesScreen:
+                name: "messages"
+            NotificationsScreen:
+                name: "notifications"
+        MDNavigationDrawer:
+            id: nav_drawer
+            radius: (0, dp(16), dp(16), 0)
+            md_bg_color: 0.1, 0.1, 0.1, 1
+            width: dp(280)
+            BoxLayout:
+                orientation: "vertical"
+                padding: dp(10)
+                spacing: dp(10)
+                BoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: None
+                    height: dp(100)
+                    padding: dp(10)
+                    AsyncImage:
+                        source: app.default_icon if os.path.exists(app.default_icon) else ""
+                        size_hint: None, None
+                        size: dp(60), dp(60)
+                        canvas.before:
+                            Color:
+                                rgba: 1, 1, 1, 1
+                            Ellipse:
+                                pos: self.pos
+                                size: self.size
+                    MDLabel:
+                        text: app.user_id
+                        font_style: "H6"
+                        theme_text_color: "Custom"
+                        text_color: 1, 1, 1, 1
+                        padding_x: dp(10)
+                ScrollView:
+                    MDList:
+                        OneLineIconListItem:
+                            text: "Home"
+                            on_release: app.root.ids.screen_manager.current = "home"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "home"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                        OneLineIconListItem:
+                            text: "VibeSphere"
+                            on_release: app.root.ids.screen_manager.current = "vibesphere"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "music"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                        OneLineIconListItem:
+                            text: "Echo"
+                            on_release: app.root.ids.screen_manager.current = "echo"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "microphone"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                        OneLineIconListItem:
+                            text: "Frame"
+                            on_release: app.root.ids.screen_manager.current = "frame"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "camera"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                        OneLineIconListItem:
+                            text: "Pulse"
+                            on_release: app.root.ids.screen_manager.current = "pulse"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "clock"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                        OneLineIconListItem:
+                            text: "Time Capsule"
+                            on_release: app.root.ids.screen_manager.current = "capsule"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "timer"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                        OneLineIconListItem:
+                            text: "Roots"
+                            on_release: app.root.ids.screen_manager.current = "roots"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "family-tree"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                        OneLineIconListItem:
+                            text: "Spark"
+                            on_release: app.root.ids.screen_manager.current = "spark"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "pencil"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                        OneLineIconListItem:
+                            text: "Challenge"
+                            on_release: app.root.ids.screen_manager.current = "challenge"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "trophy"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                        OneLineIconListItem:
+                            text: "Glow"
+                            on_release: app.root.ids.screen_manager.current = "glow"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "lightbulb"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                        OneLineIconListItem:
+                            text: "Orbit"
+                            on_release: app.root.ids.screen_manager.current = "orbit"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "orbit"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                        OneLineIconListItem:
+                            text: "Constellation"
+                            on_release: app.root.ids.screen_manager.current = "constellation"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "star"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                        OneLineIconListItem:
+                            text: "Messages"
+                            on_release: app.root.ids.screen_manager.current = "messages"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "message"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                        OneLineIconListItem:
+                            text: "Notifications"
+                            on_release: app.root.ids.screen_manager.current = "notifications"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "bell"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                        OneLineIconListItem:
+                            text: "Settings"
+                            on_release: app.root.ids.screen_manager.current = "settings"; app.root.ids.nav_drawer.set_state("close")
+                            IconLeftWidget:
+                                icon: "cog"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                MDRoundFlatButton:
+                    text: "Profile"
+                    text_color: 1, 1, 1, 1
+                    md_bg_color: 0.3, 0.3, 0.3, 1
+                    pos_hint: {"center_x": 0.5}
+                    on_release: self.parent.parent.parent.parent.show_profile(); app.root.ids.nav_drawer.set_state("close")
+
+# Screen Definitions
+<HomeScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+            Color:
+                rgba: 0.1, 0.3, 0.5, 1 if app.theme_cls.theme_style == "Dark" else 0.5, 0.7, 0.9, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                source: app.default_background if os.path.exists(app.default_background) else ""
+        MDTopAppBar:
+            title: "ConnectSphere"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["magnify", lambda x: root.show_search()], ["account-circle", lambda x: root.show_profile()], ["bell", lambda x: app.root.ids.screen_manager.current = 'notifications']]
+            size_hint_y: None
+            height: dp(56)
+        MDCard:
+            size_hint: 1, 0.1
+            pos_hint: {"top": 0.9}
+            md_bg_color: 0.2, 0.2, 0.2, 0.9
+            padding: dp(10)
+            elevation: 4
+            MDLabel:
+                text: "Welcome! Explore ConnectSphere!"
+                halign: "center"
+                theme_text_color: "Custom"
+                text_color: 0.9, 0.5, 0.5, 1
+                bold: True
+        ScrollView:
+            id: feed
+            do_scroll_x: False
+            effect_cls: "ScrollEffect"
+            size_hint: 1, 0.8
+            pos_hint: {"top": 0.8}
+            bar_width: dp(6)
+            bar_color: 0.9, 0.5, 0.5, 1
+            bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+            BoxLayout:
+                id: feed_content
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                padding: dp(10)
+
+<VibeSphereScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        MDTopAppBar:
+            title: "VibeSphere"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["home", lambda x: app.root.ids.screen_manager.current = 'home'], ["account-circle", lambda x: root.show_profile()]]
+            size_hint_y: None
+            height: dp(56)
+            pos_hint: {"top": 1}
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: 0.1
+            pos_hint: {"top": 0.9}
+            padding: dp(10)
+            spacing: dp(10)
+            MDTextField:
+                id: vibe_input
+                hint_text: "Share your vibe..."
+                mode: "rectangle"
+                size_hint_x: 0.7
+                background_color: 0, 0, 0, 0.3
+                canvas.before:
+                    Color:
+                        rgba: 1, 1, 1, 0.1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(10)]
+            MDRoundFlatButton:
+                text: "Post"
+                text_color: 1, 1, 1, 1
+                md_bg_color: 0.9, 0.5, 0.5, 1
+                size_hint_x: 0.3
+                on_release: root.share_vibe(vibe_input.text); vibe_input.text = ""
+        ScrollView:
+            id: vibe_feed
+            do_scroll_x: False
+            effect_cls: "ScrollEffect"
+            size_hint: 1, 0.8
+            pos_hint: {"top": 0.8}
+            bar_width: dp(6)
+            bar_color: 0.9, 0.5, 0.5, 1
+            bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                padding: dp(10)
+
+<EchoScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        MDTopAppBar:
+            title: "Echo"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["home", lambda x: app.root.ids.screen_manager.current = 'home'], ["account-circle", lambda x: root.show_profile()]]
+            size_hint_y: None
+            height: dp(56)
+            pos_hint: {"top": 1}
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: 0.1
+            pos_hint: {"top": 0.9}
+            padding: dp(10)
+            spacing: dp(10)
+            MDRoundFlatButton:
+                id: record_button
+                text: "Record"
+                text_color: 1, 1, 1, 1
+                md_bg_color: 0.9, 0.5, 0.5, 1
+                on_press: root.start_recording()
+            MDRoundFlatButton:
+                text: "Stop"
+                text_color: 1, 1, 1, 1
+                md_bg_color: 0.3, 0.3, 0.3, 1
+                on_release: root.stop_recording()
+            MDRoundFlatButton:
+                text: "Create Soundscape"
+                text_color: 1, 1, 1, 1
+                md_bg_color: 0.9, 0.5, 0.5, 1
+                on_release: root.create_soundscape()
+        ScrollView:
+            id: echo_list
+            do_scroll_x: False
+            effect_cls: "ScrollEffect"
+            size_hint: 1, 0.8
+            pos_hint: {"top": 0.8}
+            bar_width: dp(6)
+            bar_color: 0.9, 0.5, 0.5, 1
+            bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                padding: dp(10)
+
+<FrameScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        MDTopAppBar:
+            title: "Frame"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["home", lambda x: app.root.ids.screen_manager.current = 'home'], ["account-circle", lambda x: root.show_profile()]]
+            size_hint_y: None
+            height: dp(56)
+            pos_hint: {"top": 1}
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: 0.1
+            pos_hint: {"top": 0.9}
+            padding: dp(10)
+            spacing: dp(10)
+            MDRoundFlatButton:
+                text: "New Frame"
+                text_color: 1, 1, 1, 1
+                md_bg_color: 0.9, 0.5, 0.5, 1
+                on_release: root.open_frame_maker()
+            Slider:
+                id: speed_slider
+                min: 0.5
+                max: 5.0
+                value: 2.0
+                size_hint_x: 0.3
+                on_value: root.timelapse_speed = self.value
+            MDLabel:
+                text: f"Speed: {speed_slider.value:.1f}x"
+                size_hint_x: 0.2
+                halign: "center"
+                theme_text_color: "Custom"
+                text_color: 1, 1, 1, 1
+        ScrollView:
+            id: frame_feed
+            do_scroll_x: False
+            effect_cls: "ScrollEffect"
+            size_hint: 1, 0.8
+            pos_hint: {"top": 0.8}
+            bar_width: dp(6)
+            bar_color: 0.9, 0.5, 0.5, 1
+            bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                padding: dp(10)
+
+<PulseScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        MDTopAppBar:
+            title: "Pulse"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["home", lambda x: app.root.ids.screen_manager.current = 'home'], ["account-circle", lambda x: root.show_profile()]]
+            size_hint_y: None
+            height: dp(56)
+            pos_hint: {"top": 1}
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: 0.1
+            pos_hint: {"top": 0.9}
+            padding: dp(10)
+            spacing: dp(10)
+            MDTextField:
+                id: pulse_input
+                hint_text: "Post a thread (24h)..."
+                mode: "rectangle"
+                size_hint_x: 0.7
+                background_color: 0, 0, 0, 0.3
+                canvas.before:
+                    Color:
+                        rgba: 1, 1, 1, 0.1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(10)]
+            MDRoundFlatButton:
+                text: "Post"
+                text_color: 1, 1, 1, 1
+                md_bg_color: 0.9, 0.5, 0.5, 1
+                size_hint_x: 0.3
+                on_release: root.share_pulse(pulse_input.text); pulse_input.text = ""
+        ScrollView:
+            id: pulse_feed
+            do_scroll_x: False
+            effect_cls: "ScrollEffect"
+            size_hint: 1, 0.8
+            pos_hint: {"top": 0.8}
+            bar_width: dp(6)
+            bar_color: 0.9, 0.5, 0.5, 1
+            bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                padding: dp(10)
+
+<TimeCapsuleScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        MDTopAppBar:
+            title: "Time Capsule"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["home", lambda x: app.root.ids.screen_manager.current = 'home'], ["account-circle", lambda x: root.show_profile()]]
+            size_hint_y: None
+            height: dp(56)
+            pos_hint: {"top": 1}
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: 0.1
+            pos_hint: {"top": 0.9}
+            padding: dp(10)
+            spacing: dp(10)
+            MDTextField:
+                id: capsule_input
+                hint_text: "Write a capsule message..."
+                mode: "rectangle"
+                size_hint_x: 0.5
+                background_color: 0, 0, 0, 0.3
+                canvas.before:
+                    Color:
+                        rgba: 1, 1, 1, 0.1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(10)]
+            Spinner:
+                id: days_spinner
+                text: "Days"
+                values: ["1", "7", "30", "365"]
+                size_hint_x: 0.3
+                background_color: 0.3, 0.3, 0.3, 0.9
+                color: 1, 1, 1, 1
+                canvas.before:
+                    Color:
+                        rgba: 0.3, 0.3, 0.3, 0.5
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(10)]
+            MDRoundFlatButton:
+                text: "Schedule"
+                text_color: 1, 1, 1, 1
+                md_bg_color: 0.9, 0.5, 0.5, 1
+                size_hint_x: 0.2
+                on_release: root.share_capsule(capsule_input.text); capsule_input.text = ""
+        ScrollView:
+            id: capsule_feed
+            do_scroll_x: False
+            effect_cls: "ScrollEffect"
+            size_hint: 1, 0.8
+            pos_hint: {"top": 0.8}
+            bar_width: dp(6)
+            bar_color: 0.9, 0.5, 0.5, 1
+            bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                padding: dp(10)
+
+<RootsScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        MDTopAppBar:
+            title: "Roots"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["home", lambda x: app.root.ids.screen_manager.current = 'home'], ["account-circle", lambda x: root.show_profile()]]
+            size_hint_y: None
+            height: dp(56)
+            pos_hint: {"top": 1}
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: 0.1
+            pos_hint: {"top": 0.9}
+            padding: dp(10)
+            spacing: dp(10)
+            MDTextField:
+                id: roots_input
+                hint_text: "Share a family story..."
+                mode: "rectangle"
+                size_hint_x: 0.7
+                background_color: 0, 0, 0, 0.3
+                canvas.before:
+                    Color:
+                        rgba: 1, 1, 1, 0.1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(10)]
+            MDRoundFlatButton:
+                text: "Post"
+                text_color: 1, 1, 1, 1
+                md_bg_color: 0.9, 0.5, 0.5, 1
+                size_hint_x: 0.3
+                on_release: root.share_roots(roots_input.text); roots_input.text = ""
+        ScrollView:
+            id: roots_feed
+            do_scroll_x: False
+            effect_cls: "ScrollEffect"
+            size_hint: 1, 0.8
+            pos_hint: {"top": 0.8}
+            bar_width: dp(6)
+            bar_color: 0.9, 0.5, 0.5, 1
+            bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                padding: dp(10)
+
+<SparkScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        MDTopAppBar:
+            title: "Spark"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["home", lambda x: app.root.ids.screen_manager.current = 'home'], ["account-circle", lambda x: root.show_profile()]]
+            size_hint_y: None
+            height: dp(56)
+            pos_hint: {"top": 1}
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: 0.1
+            pos_hint: {"top": 0.9}
+            padding: dp(10)
+            spacing: dp(10)
+            MDRoundFlatButton:
+                text: "Create Spark"
+                text_color: 1, 1, 1, 1
+                md_bg_color: 0.9, 0.5, 0.5, 1
+                on_release: root.open_spark_maker()
+        ScrollView:
+            id: spark_feed
+            do_scroll_x: False
+            effect_cls: "ScrollEffect"
+            size_hint: 1, 0.8
+            pos_hint: {"top": 0.8}
+            bar_width: dp(6)
+            bar_color: 0.9, 0.5, 0.5, 1
+            bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                padding: dp(10)
+
+<ChallengeScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        MDTopAppBar:
+            title: "Challenge"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["home", lambda x: app.root.ids.screen_manager.current = 'home'], ["account-circle", lambda x: root.show_profile()]]
+            size_hint_y: None
+            height: dp(56)
+            pos_hint: {"top": 1}
+        Widget:
+            id: canvas_widget
+            size_hint_y: 0.7
+            pos_hint: {"top": 0.9}
+            on_touch_down: root.on_canvas_touch_down(args[1])
+            on_touch_move: root.on_canvas_touch_move(args[1])
+            canvas:
+                Color:
+                    rgba: 0.2, 0.2, 0.2, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: 0.1
+            pos_hint: {"top": 0.2}
+            padding: dp(10)
+            spacing: dp(10)
+            MDRoundFlatButton:
+                text: "Clear"
+                text_color: 1, 1, 1, 1
+                md_bg_color: 0.3, 0.3, 0.3, 1
+                on_release: root.clear_canvas()
+            MDRoundFlatButton:
+                text: "Submit"
+                text_color: 1, 1, 1, 1
+                md_bg_color: 0.9, 0.5, 0.5, 1
+                on_release: root.share_challenge()
+        ScrollView:
+            id: challenge_list
+            do_scroll_x: False
+            effect_cls: "ScrollEffect"
+            size_hint: 1, 0.1
+            pos_hint: {"top": 0.1}
+            bar_width: dp(6)
+            bar_color: 0.9, 0.5, 0.5, 1
+            bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                padding: dp(10)
+
+<GlowScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        MDTopAppBar:
+            title: "Glow"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["home", lambda x: app.root.ids.screen_manager.current = 'home'], ["account-circle", lambda x: root.show_profile()]]
+            size_hint_y: None
+            height: dp(56)
+            pos_hint: {"top": 1}
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: 0.1
+            pos_hint: {"top": 0.9}
+            padding: dp(10)
+            spacing: dp(10)
+            MDTextField:
+                id: glow_input
+                hint_text: "Spread some positivity..."
+                mode: "rectangle"
+                size_hint_x: 0.7
+                background_color: 0, 0, 0, 0.3
+                canvas.before:
+                    Color:
+                        rgba: 1, 1, 1, 0.1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(10)]
+            MDRoundFlatButton:
+                text: "Post"
+                text_color: 1, 1, 1, 1
+                md_bg_color: 0.9, 0.5, 0.5, 1
+                size_hint_x: 0.3
+                on_release: root.share_glow(glow_input.text); glow_input.text = ""
+        ScrollView:
+            id: glow_feed
+            do_scroll_x: False
+            effect_cls: "ScrollEffect"
+            size_hint: 1, 0.8
+            pos_hint: {"top": 0.8}
+            bar_width: dp(6)
+            bar_color: 0.9, 0.5, 0.5, 1
+            bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                padding: dp(10)
+
+<OrbitScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        MDTopAppBar:
+            title: "Orbit"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["home", lambda x: app.root.ids.screen_manager.current = 'home'], ["star", lambda x: app.root.ids.screen_manager.current = 'constellation'], ["account-circle", lambda x: root.show_profile()]]
+            size_hint_y: None
+            height: dp(56)
+            pos_hint: {"top": 1}
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: 0.1
+            pos_hint: {"top": 0.9}
+            padding: dp(10)
+            spacing: dp(10)
+            Spinner:
+                id: orbit_spinner
+                text: "Join an orbit"
+                values: ["Family", "Friends", "Work", "Hobbies"]
+                size_hint_x: 0.3
+                background_color: 0.3, 0.3, 0.3, 0.9
+                color: 1, 1, 1, 1
+                on_text: root.switch_orbit(self.text)
+                canvas.before:
+                    Color:
+                        rgba: 0.3, 0.3, 0.3, 0.5
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(10)]
+            MDTextField:
+                id: orbit_input
+                hint_text: "Post to orbit..."
+                mode: "rectangle"
+                size_hint_x: 0.4
+                background_color: 0, 0, 0, 0.3
+                canvas.before:
+                    Color:
+                        rgba: 1, 1, 1, 0.1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(10)]
+            MDRoundFlatButton:
+                text: "Post"
+                text_color: 1, 1, 1, 1
+                md_bg_color: 0.9, 0.5, 0.5, 1
+                size_hint_x: 0.3
+                on_release: root.share_orbit(orbit_input.text); orbit_input.text = ""
+        ScrollView:
+            id: orbit_feed
+            do_scroll_x: False
+            effect_cls: "ScrollEffect"
+            size_hint: 1, 0.8
+            pos_hint: {"top": 0.8}
+            bar_width: dp(6)
+            bar_color: 0.9, 0.5, 0.5, 1
+            bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                padding: dp(10)
+        ScrollView:
+            id: orbit_list
+            size_hint: 0.3, 0.8
+            pos_hint: {"top": 0.8, "left": 1}
+            do_scroll_x: False
+            effect_cls: "ScrollEffect"
+            bar_width: dp(6)
+            bar_color: 0.9, 0.5, 0.5, 1
+            bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(10)
+                padding: dp(10)
+
+<OrbitConstellationScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+            Color:
+                rgba: 0.1, 0.2, 0.4, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                source: app.default_background if os.path.exists(app.default_background) else ""
+        MDTopAppBar:
+            title: "Constellation"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["home", lambda x: app.root.ids.screen_manager.current = 'home'], ["account-circle", lambda x: root.show_profile()]]
+            size_hint_y: None
+            height: dp(56)
+            pos_hint: {"top": 1}
+        Widget:
+            id: constellation
+            size_hint: 1, 0.9
+            pos_hint: {"top": 0.9}
+            on_parent: root.draw_constellation() if self.parent else None
+            canvas:
+                Color:
+                    rgba: 0, 0, 0, 0.8
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+<SettingsScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        MDTopAppBar:
+            title: "Settings"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["home", lambda x: app.root.ids.screen_manager.current = 'home'], ["account-circle", lambda x: root.show_profile()]]
+            size_hint_y: None
+            height: dp(56)
+            pos_hint: {"top": 1}
+        BoxLayout:
+            orientation: "vertical"
+            padding: dp(20)
+            spacing: dp(10)
+            size_hint: 1, 0.9
+            pos_hint: {"top": 0.9}
+            MDLabel:
+                text: "Theme Settings"
+                halign: "center"
+                theme_text_color: "Custom"
+                text_color: 1, 1, 1, 1
+                bold: True
+            MDRoundFlatButton:
+                text: f"Toggle Theme (Current: {app.theme_cls.theme_style})"
+                text_color: 1, 1, 1, 1
+                md_bg_color: 0.9, 0.5, 0.5, 1
+                pos_hint: {"center_x": 0.5}
+                on_release: app.theme_cls.theme_style = "Light" if app.theme_cls.theme_style == "Dark" else "Dark"
+
+<MessagesScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        MDTopAppBar:
+            title: "Messages"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["home", lambda x: app.root.ids.screen_manager.current = 'home'], ["account-circle", lambda x: root.show_profile()]]
+            size_hint_y: None
+            height: dp(56)
+            pos_hint: {"top": 1}
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint: 1, 0.9
+            pos_hint: {"top": 0.9}
+            ScrollView:
+                id: user_list
+                size_hint_x: 0.3
+                do_scroll_x: False
+                effect_cls: "ScrollEffect"
+                bar_width: dp(6)
+                bar_color: 0.9, 0.5, 0.5, 1
+                bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: dp(10)
+                    padding: dp(10)
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_x: 0.7
+                spacing: dp(10)
+                padding: dp(10)
+                ScrollView:
+                    id: message_list
+                    do_scroll_x: False
+                    effect_cls: "ScrollEffect"
+                    size_hint_y: 0.8
+                    bar_width: dp(6)
+                    bar_color: 0.9, 0.5, 0.5, 1
+                    bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+                    BoxLayout:
+                        orientation: "vertical"
+                        size_hint_y: None
+                        height: self.minimum_height
+                        spacing: dp(15)
+                        padding: dp(10)
+                BoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: 0.2
+                    MDTextField:
+                        id: message_input
+                        hint_text: "Type a message..."
+                        mode: "rectangle"
+                        size_hint_x: 0.7
+                        background_color: 0, 0, 0, 0.3
+                        canvas.before:
+                            Color:
+                                rgba: 1, 1, 1, 0.1
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [dp(10)]
+                    MDRoundFlatButton:
+                        text: "Send"
+                        text_color: 1, 1, 1, 1
+                        md_bg_color: 0.9, 0.5, 0.5, 1
+                        size_hint_x: 0.3
+                        on_release: root.send_message(message_input.text); message_input.text = ""
+
+<NotificationsScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        MDTopAppBar:
+            title: "Notifications"
+            elevation: 8
+            md_bg_color: 0.1, 0.5, 0.9, 1
+            left_action_items: [["menu", lambda x: root.toggle_nav_drawer()]]
+            right_action_items: [["home", lambda x: app.root.ids.screen_manager.current = 'home'], ["account-circle", lambda x: root.show_profile()]]
+            size_hint_y: None
+            height: dp(56)
+            pos_hint: {"top": 1}
+        ScrollView:
+            id: notif_list
+            do_scroll_x: False
+            effect_cls: "ScrollEffect"
+            size_hint: 1, 0.9
+            pos_hint: {"top": 0.9}
+            bar_width: dp(6)
+            bar_color: 0.9, 0.5, 0.5, 1
+            bar_inactive_color: 0.3, 0.3, 0.3, 0.5
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                padding: dp(10)
+
+<DraggableImage>:
+    drag_timeout: 1000000
+    drag_distance: 20
+    size_hint: None, None
+    size: self.texture_size if self.texture else (100, 100)
+    source: ""
+    allow_stretch: True
+    keep_ratio: True
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 0.5
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    on_pos: self.canvas.before.children[0].pos = self.pos
+    on_size: self.canvas.before.children[0].size = self.size

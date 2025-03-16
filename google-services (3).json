@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "676108288786",
+    "project_id": "connectsphere-d979f",
+    "storage_bucket": "connectsphere-d979f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:676108288786:android:69a673d640647dfd9ba9cb",
+        "android_client_info": {
+          "package_name": "com.aptilartech.connectsphere"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "676108288786-bdt4qqbk63png0r8npdcdvtb2jsq340b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpnwFzMuhEV-Z6Gr4xbt-Y9NQfoLjFjPQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "676108288786-bdt4qqbk63png0r8npdcdvtb2jsq340b.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
